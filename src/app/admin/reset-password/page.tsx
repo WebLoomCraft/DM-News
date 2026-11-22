@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/admin-api";
+import { Logo3D } from "@/components/brand/Logo3D";
 
 function ResetForm() {
   const params = useSearchParams();
@@ -97,7 +98,7 @@ export default function ResetPasswordPage() {
     <div className="grid min-h-screen place-items-center bg-[#07101f] px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <span className="mx-auto grid h-12 w-12 place-items-center bg-[var(--accent)] font-cond text-xl font-bold text-white">DM</span>
+          <span className="mx-auto block h-[84px] w-[84px]"><Logo3D variant="compact" href={undefined} wordmark="" tagline="" /></span>
           <h2 className="mt-4 font-display text-xl font-bold text-white">Password reset</h2>
         </div>
         <Suspense fallback={<p className="text-center text-xs text-white/50">Loading…</p>}>

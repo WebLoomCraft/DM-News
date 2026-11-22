@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, Lock, Mail } from "lucide-react";
 import { api } from "@/lib/admin-api";
+import { Logo3D } from "@/components/brand/Logo3D";
 
 const DEMO_HINT = process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS !== "false";
 
@@ -52,8 +53,8 @@ export default function LoginForm() {
   return (
     <div className="grid min-h-screen place-items-center bg-[#07101f] px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <span className="mx-auto grid h-12 w-12 place-items-center bg-[var(--accent)] font-cond text-xl font-bold text-white">DM</span>
+        <div className="mb-6 flex flex-col items-center">
+          <Logo3D variant="hero" href={undefined} wordmark="" tagline="" className="logo3d--showcase" />
           <h1 className="mt-4 font-display text-2xl font-bold text-white">DM News Network</h1>
           <p className="mt-1 text-xs uppercase tracking-[0.18em] text-white/40">Newsroom sign in</p>
         </div>
