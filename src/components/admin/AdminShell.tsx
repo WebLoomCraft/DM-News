@@ -18,7 +18,6 @@ import {
   Tags as TagsIcon,
   UserCog,
   Users as UsersIcon,
-  Video as VideoIcon,
   X,
 } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
@@ -40,7 +39,6 @@ const NAV: NavEntry[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
   { href: "/admin/articles", label: "Articles", icon: Newspaper, capability: "articles.create", group: "Content" },
   { href: "/admin/media", label: "Media library", icon: ImageIcon, capability: "media.manage", group: "Content" },
-  { href: "/admin/videos", label: "Videos", icon: VideoIcon, capability: "videos.manage", group: "Content" },
   { href: "/admin/categories", label: "Categories", icon: FolderTree, capability: "taxonomy.manage", group: "Taxonomy" },
   { href: "/admin/tags", label: "Tags", icon: TagsIcon, capability: "taxonomy.manage", group: "Taxonomy" },
   { href: "/admin/authors", label: "Authors", icon: UsersIcon, capability: "authors.manage", group: "Taxonomy" },
@@ -56,7 +54,6 @@ const TITLES: Record<string, string> = {
   "/admin/articles": "Articles",
   "/admin/articles/new": "New article",
   "/admin/media": "Media library",
-  "/admin/videos": "Video management",
   "/admin/categories": "Categories",
   "/admin/tags": "Tags",
   "/admin/authors": "Authors",

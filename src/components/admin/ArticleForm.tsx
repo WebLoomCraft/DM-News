@@ -322,7 +322,7 @@ export default function ArticleForm({ articleId, canPublishArticles }: { article
 
           <div className="p-4 sm:p-5">
             {tab === "content" ? (
-              <Field label="Article body" required hint="Use the toolbar for headings, lists, quotes, links, images and video embeds. Everything is sanitised before publishing.">
+              <Field label="Article body" required hint="Use the toolbar for headings, lists, quotes, links, images and YouTube embeds. Everything is sanitised before publishing.">
                 <RichTextEditor value={form.content} onChange={(html) => set("content", html)} />
               </Field>
             ) : null}

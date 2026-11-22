@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BarChart3, FileText, FolderTree, ImageIcon, Mail, MessageSquare, Plus, Users, Video } from "lucide-react";
+import { BarChart3, FileText, FolderTree, ImageIcon, Mail, MessageSquare, Plus, Users } from "lucide-react";
 import { api } from "@/lib/admin-api";
 import { formatDate, timeAgo } from "@/lib/utils";
 import { Badge, Button, EmptyRow, ErrorNote, Panel, Spinner, statusTone } from "@/components/admin/ui";
@@ -18,7 +18,6 @@ type Stats = {
     media: number;
     tags: number;
     authors: number;
-    videos: number;
     subscribers: number;
     unreadMessages: number;
   };
@@ -68,7 +67,6 @@ export default function DashboardPage() {
     { label: "Scheduled", value: stats.totals.scheduled, icon: FileText, href: "/admin/articles?status=scheduled" },
     { label: "Categories", value: stats.totals.categories, icon: FolderTree, href: "/admin/categories" },
     { label: "Media files", value: stats.totals.media, icon: ImageIcon, href: "/admin/media" },
-    { label: "Videos", value: stats.totals.videos, icon: Video, href: "/admin/videos" },
     { label: "Subscribers", value: stats.totals.subscribers, icon: Mail, href: "/admin/subscribers" },
   ];
 

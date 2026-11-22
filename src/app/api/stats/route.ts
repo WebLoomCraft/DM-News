@@ -1,6 +1,6 @@
 import { and, count, desc, eq, gte, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { articles, authors, categories, contactMessages, dailyStats, media, newsletterSubscribers, tags, users, videos } from "@/db/schema";
+import { articles, authors, categories, contactMessages, dailyStats, media, newsletterSubscribers, tags, users } from "@/db/schema";
 import { handleApiError, ok, requireUser } from "@/lib/api";
 import { can, canEditRecord } from "@/lib/permissions";
 import { getRecentDailyStats } from "@/lib/queries";
@@ -17,7 +17,6 @@ export async function GET() {
         db.select({ value: count() }).from(media),
         db.select({ value: count() }).from(tags),
         db.select({ value: count() }).from(authors),
-        db.select({ value: count() }).from(videos),
         db.select({ value: count() }).from(newsletterSubscribers),
         db.select({ value: count() }).from(contactMessages).where(eq(contactMessages.isRead, false)),
       ]),
@@ -50,7 +49,7 @@ export async function GET() {
       getRecentDailyStats(14),
     ]);
 
-    const [articleCount, categoryCount, mediaCount, tagCount, authorCount, videoCount, subscriberCount, unreadMessages] = totals;
+    const [articleCount, categoryCount, mediaCount, tagCount, authorCount, subscriberCount, unreadMessages] = totals;
 
     const statusMap: Record<string, number> = { draft: 0, published: 0, scheduled: 0, archived: 0 };
     for (const row of byStatus) statusMap[row.status] = row.value;
@@ -66,7 +65,6 @@ export async function GET() {
         media: mediaCount?.[0]?.value ?? 0,
         tags: tagCount?.[0]?.value ?? 0,
         authors: authorCount?.[0]?.value ?? 0,
-        videos: videoCount?.[0]?.value ?? 0,
         subscribers: subscriberCount?.[0]?.value ?? 0,
         unreadMessages: unreadMessages?.[0]?.value ?? 0,
       },

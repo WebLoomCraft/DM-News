@@ -7,7 +7,6 @@ import {
   getHomepageSections,
   getLatestArticles,
   getTrendingArticles,
-  getVideoItems,
   recordDailyStat,
   type ArticleSummary,
 } from "@/lib/queries";
@@ -18,7 +17,6 @@ import LatestNewsGrid from "@/components/site/LatestNewsGrid";
 import LivePanel from "@/components/site/LivePanel";
 import { HeroMasthead } from "@/components/site/HeroMasthead";
 import NewsletterForm from "@/components/site/NewsletterForm";
-import { VideoCard, type VideoItem } from "@/components/site/VideoCard";
 import { getBaseUrl } from "@/lib/site-url";
 import { timeAgo } from "@/lib/utils";
 
@@ -26,7 +24,6 @@ export const dynamic = "force-dynamic";
 
 type SectionData = {
   articles?: ArticleSummary[];
-  videos?: VideoItem[];
   total?: number;
   categorySlug?: string;
   categoryName?: string;
@@ -143,14 +140,13 @@ function BigRead({ article, opinions }: { article: ArticleSummary; opinions: Art
 }
 
 export default async function HomePage() {
-  const [settings, sections, featured, latest, latestTotal, trending, videos, baseUrl] = await Promise.all([
+  const [settings, sections, featured, latest, latestTotal, trending, baseUrl] = await Promise.all([
     getSettings(),
     getHomepageSections(),
     getFeaturedArticles(4),
     getLatestArticles({ limit: 9 }),
     countLatestArticles({}),
     getTrendingArticles(5),
-    getVideoItems(8),
     getBaseUrl(),
   ]);
 
@@ -189,7 +185,6 @@ export default async function HomePage() {
   const dataByKey = new Map<string, SectionData>();
   dataByKey.set("featured", { articles: featured });
   dataByKey.set("latest", { articles: latestGridSeed.length ? latestGridSeed : latest, total: latestTotal });
-  dataByKey.set("videos", { videos: videos.slice(0, 4) as VideoItem[] });
   for (const { section, items } of categoryData) {
     const slug = section.key.replace("category:", "");
     dataByKey.set(section.key, { articles: items, categorySlug: slug });
@@ -312,28 +307,6 @@ export default async function HomePage() {
       );
     }
 
-    if (section.key === "videos") {
-      const items = data?.videos ?? [];
-      return (
-        <section key={section.id} className="bg-[var(--ink)] py-12">
-          <div className="container-site">
-            <SectionHeading title={section.title} href="/videos" tone="dark" />
-            {items.length === 0 ? (
-              <p className="border border-dashed border-white/20 px-6 py-10 text-center text-sm text-white/55">
-                No video reports published yet. Add YouTube videos or clips from Admin → Videos.
-              </p>
-            ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {items.map((video) => (
-                  <VideoCard key={video.id} video={video} className="border-white/10 bg-white/[0.04] text-white" />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      );
-    }
-
     if (section.key === "live") {
       if (!settings.liveStreamEnabled) return null;
       return (
@@ -344,27 +317,29 @@ export default async function HomePage() {
               <LivePanel streamUrl={settings.liveStreamUrl} label={settings.watchLiveLabel} />
             </div>
             <div className="border border-[#e3e7ee] bg-white p-5">
-              <h3 className="section-title text-[0.95rem] text-[var(--ink)]">Latest video reports</h3>
+              <h3 className="section-title text-[0.95rem] text-[var(--ink)]">Latest reports</h3>
               <div className="mt-4 flex flex-col divide-y divide-[#eef0f4]">
-                {videos.slice(0, 4).map((video) => (
-                  <div key={video.id} className="py-3 first:pt-0">
-                    <Link href="/videos" className="group flex gap-3">
+                {latest.slice(0, 4).map((article) => (
+                  <div key={article.id} className="py-3 first:pt-0">
+                    <Link href={`/news/${article.slug}`} className="group flex gap-3">
                       <span className="relative h-16 w-24 shrink-0 overflow-hidden bg-[#0d1a2d]">
-                        {video.thumbnailUrl ? (
-                          <img src={video.thumbnailUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+                        {article.featuredImageUrl ? (
+                          <img src={article.featuredImageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
                         ) : null}
                       </span>
                       <span className="min-w-0">
                         <span className="line-clamp-2 block text-[0.9rem] font-semibold leading-snug group-hover:text-[var(--accent)]">
-                          {video.title}
+                          {article.title}
                         </span>
-                        <span className="kicker mt-1 block text-[0.6rem] text-[#8b95a3]">{video.kind}</span>
+                        <span className="kicker mt-1 block text-[0.6rem] text-[#8b95a3]">
+                          {article.publishedAt ? timeAgo(article.publishedAt) : "Newsroom"}
+                        </span>
                       </span>
                     </Link>
                   </div>
                 ))}
-                {videos.length === 0 ? (
-                  <p className="py-3 text-sm text-[#5b6779]">No video reports published yet.</p>
+                {latest.length === 0 ? (
+                  <p className="py-3 text-sm text-[#5b6779]">No reports published yet.</p>
                 ) : null}
               </div>
             </div>

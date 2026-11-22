@@ -90,9 +90,9 @@ export default function MediaPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-display text-2xl font-bold text-slate-900">Media library</h2>
-          <p className="mt-1 text-sm text-slate-500">{pagination.total} files · images up to 8MB, short clips up to 48MB.</p>
+          <p className="mt-1 text-sm text-slate-500">{pagination.total} images · JPG, PNG, WebP, GIF or AVIF up to 8MB each.</p>
         </div>
-        <input ref={fileRef} type="file" multiple accept="image/*,video/mp4,video/webm" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+        <input ref={fileRef} type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
         <Button onClick={() => fileRef.current?.click()} loading={uploading}>
           <Upload className="h-4 w-4" /> Upload files
         </Button>
@@ -116,7 +116,7 @@ export default function MediaPage() {
         >
           <ImagePlus className="h-6 w-6 text-slate-400" />
           <p className="mt-2 text-sm font-semibold text-slate-700">Drag &amp; drop files here</p>
-          <p className="mt-1 text-xs text-slate-500">JPG, PNG, WebP, GIF, AVIF · MP4 and WebM clips · prefer YouTube embeds for long video</p>
+          <p className="mt-1 text-xs text-slate-500">JPG, PNG, WebP, GIF or AVIF · up to 8MB each · images only, no video uploads</p>
         </div>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
@@ -140,11 +140,7 @@ export default function MediaPage() {
           {items.map((item) => (
             <div key={item.id} className="group border border-slate-200 bg-white">
               <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                {item.mimeType.startsWith("video") ? (
-                  <video src={item.url} className="h-full w-full object-cover" muted playsInline preload="metadata" />
-                ) : (
-                  <img src={item.url} alt={item.alt || item.originalName} loading="lazy" className="h-full w-full object-cover" />
-                )}
+                <img src={item.url} alt={item.alt || item.originalName} loading="lazy" className="h-full w-full object-cover" />
               </div>
               <div className="p-2.5">
                 <p className="truncate text-xs font-medium text-slate-700">{item.originalName}</p>

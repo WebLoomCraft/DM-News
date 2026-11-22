@@ -144,7 +144,7 @@ export default function MediaPicker({
         <input
           ref={fileRef}
           type="file"
-          accept="image/*,video/mp4,video/webm"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
           multiple
           className="hidden"
           onChange={(e) => doUpload(e.target.files)}
@@ -167,7 +167,6 @@ export default function MediaPicker({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
           {items.map((item) => {
-            const isVideo = item.mimeType.startsWith("video");
             const active = selected?.id === item.id;
             return (
               <button
@@ -180,11 +179,7 @@ export default function MediaPicker({
                 className={`group relative overflow-hidden border bg-slate-100 text-left ${active ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/25" : "border-slate-200 hover:border-slate-400"}`}
               >
                 <span className="block aspect-[4/3] w-full overflow-hidden">
-                  {isVideo ? (
-                    <video src={item.url} className="h-full w-full object-cover" muted playsInline preload="metadata" />
-                  ) : (
-                    <img src={item.url} alt={item.alt || item.originalName} loading="lazy" className="h-full w-full object-cover" />
-                  )}
+                  <img src={item.url} alt={item.alt || item.originalName} loading="lazy" className="h-full w-full object-cover" />
                 </span>
                 <span className="block truncate px-2 py-1.5 text-[0.68rem] text-slate-600">{item.originalName}</span>
               </button>
@@ -197,11 +192,7 @@ export default function MediaPicker({
         <div className="mt-5 border-t border-slate-200 pt-4">
           <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
             <div className="overflow-hidden border border-slate-200 bg-slate-100">
-              {selected.mimeType.startsWith("video") ? (
-                <video src={selected.url} className="aspect-[4/3] w-full object-cover" controls muted />
-              ) : (
-                <img src={selected.url} alt={selected.alt || selected.originalName} className="aspect-[4/3] w-full object-cover" />
-              )}
+              <img src={selected.url} alt={selected.alt || selected.originalName} className="aspect-[4/3] w-full object-cover" />
             </div>
             <div className="space-y-3">
               <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">

@@ -9,7 +9,6 @@ export type Capability =
   | "media.delete"
   | "taxonomy.manage"
   | "authors.manage"
-  | "videos.manage"
   | "homepage.manage"
   | "settings.manage"
   | "users.manage"
@@ -34,7 +33,6 @@ const MATRIX: Record<string, Capability[]> = {
     "media.delete",
     "taxonomy.manage",
     "authors.manage",
-    "videos.manage",
     "subscribers.manage",
     "messages.manage",
   ],
@@ -47,7 +45,6 @@ const MATRIX: Record<string, Capability[]> = {
     "media.delete",
     "taxonomy.manage",
     "authors.manage",
-    "videos.manage",
     "homepage.manage",
     "settings.manage",
     "subscribers.manage",
@@ -62,7 +59,6 @@ const MATRIX: Record<string, Capability[]> = {
     "media.delete",
     "taxonomy.manage",
     "authors.manage",
-    "videos.manage",
     "homepage.manage",
     "settings.manage",
     "users.manage",
@@ -96,7 +92,6 @@ export const ALL_CAPABILITIES: Capability[] = [
   "media.delete",
   "taxonomy.manage",
   "authors.manage",
-  "videos.manage",
   "homepage.manage",
   "settings.manage",
   "users.manage",

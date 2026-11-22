@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Youtube } from "lucide-react";
+import { ArrowUpRight, Facebook, Instagram, Youtube } from "lucide-react";
 import type { Settings } from "@/lib/settings";
 import { getFooterColumns, getNavItems, type FooterColumn, type NavItem } from "@/lib/settings";
 import NewsletterForm from "./NewsletterForm";
@@ -94,6 +94,38 @@ export default function SiteFooter({ settings }: { settings: Settings }) {
             </ul>
           </div>
         ))}
+      </div>
+
+      {/* WebLoom attribution — DM News Network is a WebLoom project. */}
+      <div className="border-t border-white/10">
+        <div className="container-site flex flex-col items-start justify-between gap-4 py-7 sm:flex-row sm:items-center">
+          <p className="text-sm text-white/55">
+            <span className="font-semibold text-white">DM News Network</span> is a project of{" "}
+            <a
+              href="https://web-loom.vercel.app"
+              target="_blank"
+              rel="noopener"
+              className="group inline-flex items-center gap-1.5 align-baseline font-semibold text-white underline decoration-[var(--accent)] decoration-2 underline-offset-4 transition-colors hover:text-[var(--accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            >
+              WebLoom
+              <ArrowUpRight
+                className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                aria-hidden
+              />
+              <span className="sr-only">(opens the WebLoom website in a new tab)</span>
+            </a>
+            .
+          </p>
+          <a
+            href="https://web-loom.vercel.app"
+            target="_blank"
+            rel="noopener"
+            className="kicker inline-flex shrink-0 items-center gap-2 border border-white/15 px-3.5 py-2 text-[0.58rem] text-white/60 transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white"
+          >
+            Designed &amp; built by WebLoom
+            <ArrowUpRight className="h-3 w-3" aria-hidden />
+          </a>
+        </div>
       </div>
 
       <div className="border-t border-white/10 bg-[color-mix(in_srgb,var(--ink)_88%,#000)]">

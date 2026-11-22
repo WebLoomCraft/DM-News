@@ -25,14 +25,7 @@ const IMAGE_TYPES: Record<string, string> = {
   "image/avif": "avif",
 };
 
-const VIDEO_TYPES: Record<string, string> = {
-  "video/mp4": "mp4",
-  "video/webm": "webm",
-  "video/quicktime": "mov",
-};
-
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-export const MAX_VIDEO_BYTES = 48 * 1024 * 1024;
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/+$/, "");
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -44,7 +37,7 @@ export function remoteStorageEnabled(): boolean {
 }
 
 function safeExt(name: string, mime: string): string {
-  const fromMime = IMAGE_TYPES[mime] || VIDEO_TYPES[mime];
+  const fromMime = IMAGE_TYPES[mime];
   if (fromMime) return fromMime;
   const ext = path.extname(name).replace(".", "").toLowerCase();
   return /^[a-z0-9]{2,5}$/.test(ext) ? ext : "bin";
@@ -138,21 +131,18 @@ async function uploadToSupabase(filename: string, buffer: Buffer, mime: string):
 
 export async function saveUpload(file: File): Promise<StoredFile> {
   const mime = (file.type || "").toLowerCase();
-  const isImage = Boolean(IMAGE_TYPES[mime]);
-  const isVideo = Boolean(VIDEO_TYPES[mime]);
-  if (!isImage && !isVideo) {
-    throw new ApiError(415, "Unsupported file type. Upload JPG, PNG, WebP, GIF or AVIF images (MP4/WebM for short clips).");
+  if (!IMAGE_TYPES[mime]) {
+    throw new ApiError(415, "Unsupported file type. Only images can be uploaded — JPG, PNG, WebP, GIF or AVIF.");
   }
-  const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-  if (file.size > limit) {
-    throw new ApiError(413, `File is too large. Maximum ${Math.round(limit / (1024 * 1024))}MB for ${isVideo ? "video" : "images"}.`);
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new ApiError(413, `Image is too large. Maximum ${Math.round(MAX_IMAGE_BYTES / (1024 * 1024))}MB per image.`);
   }
   if (file.size === 0) throw new ApiError(422, "The uploaded file is empty");
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const ext = safeExt(file.name, mime);
   const filename = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}.${ext}`;
-  const dims = isImage ? readImageDimensions(buffer, mime) : { width: null, height: null };
+  const dims = readImageDimensions(buffer, mime);
 
   if (remoteStorageEnabled()) {
     const publicUrl = await uploadToSupabase(filename, buffer, mime);
@@ -212,6 +202,11 @@ export function resolveUploadPath(segments: string[]): string | null {
   return resolved;
 }
 
+/**
+ * Extension → MIME map used when serving a stored file. Images are the only
+ * accepted upload type — video was retired so storage stays inside the free
+ * tier — so no video extensions are mapped here.
+ */
 export const MIME_BY_EXT: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
@@ -220,7 +215,4 @@ export const MIME_BY_EXT: Record<string, string> = {
   gif: "image/gif",
   avif: "image/avif",
   svg: "image/svg+xml",
-  mp4: "video/mp4",
-  webm: "video/webm",
-  mov: "video/quicktime",
 };

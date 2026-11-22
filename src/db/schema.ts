@@ -150,25 +150,6 @@ export const media = pgTable(
   (t) => [uniqueIndex("media_filename_idx").on(t.filename), index("media_created_idx").on(t.createdAt)],
 );
 
-export const videos = pgTable(
-  "videos",
-  {
-    id: serial("id").primaryKey(),
-    title: varchar("title", { length: 260 }).notNull(),
-    youtubeUrl: text("youtube_url").notNull(),
-    youtubeId: varchar("youtube_id", { length: 40 }),
-    thumbnailUrl: text("thumbnail_url"),
-    description: text("description"),
-    kind: varchar("kind", { length: 30 }).notNull().default("report"), // report | interview | clip | live
-    isLive: boolean("is_live").notNull().default(false),
-    orderIndex: integer("order_index").notNull().default(0),
-    publishedAt: timestamp("published_at", { withTimezone: true }).defaultNow(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [index("videos_published_idx").on(t.publishedAt)],
-);
-
 export const homepageSections = pgTable(
   "homepage_sections",
   {
@@ -281,7 +262,6 @@ export type CategoryRow = typeof categories.$inferSelect;
 export type TagRow = typeof tags.$inferSelect;
 export type AuthorRow = typeof authors.$inferSelect;
 export type MediaRow = typeof media.$inferSelect;
-export type VideoRow = typeof videos.$inferSelect;
 export type SettingsRow = typeof siteSettings.$inferSelect;
 export type HomepageSectionRow = typeof homepageSections.$inferSelect;
 export type SubscriberRow = typeof newsletterSubscribers.$inferSelect;
