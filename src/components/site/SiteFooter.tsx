@@ -3,6 +3,7 @@ import { Facebook, Instagram, Youtube } from "lucide-react";
 import type { Settings } from "@/lib/settings";
 import { getFooterColumns, getNavItems, type FooterColumn, type NavItem } from "@/lib/settings";
 import NewsletterForm from "./NewsletterForm";
+import { Logo3D } from "@/components/brand/Logo3D";
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -39,16 +40,19 @@ export default function SiteFooter({ settings }: { settings: Settings }) {
 
       <div className="container-site grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div>
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            {settings.logoUrl ? (
+          {settings.logoUrl ? (
+            <Link href="/" className="inline-flex items-center gap-2.5">
               <img src={settings.logoUrl} alt={`${settings.siteName} logo`} className="h-10 w-auto object-contain" width={160} height={40} />
-            ) : (
-              <span className="grid h-10 w-10 place-items-center bg-[var(--accent)] font-cond text-lg font-bold text-white">
-                {settings.logoMarkText}
-              </span>
-            )}
-            <span className="font-display text-xl font-bold text-white">{settings.logoWordmark}</span>
-          </Link>
+              <span className="font-display text-xl font-bold text-white">{settings.logoWordmark}</span>
+            </Link>
+          ) : (
+            <Logo3D
+              href="/"
+              tone="dark"
+              wordmark={settings.logoWordmark || settings.siteName}
+              tagline="Independent · Verified · 24/7"
+            />
+          )}
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/55">{settings.footerAbout}</p>
           {socials.length ? (
             <div className="mt-5 flex items-center gap-3">
@@ -92,9 +96,13 @@ export default function SiteFooter({ settings }: { settings: Settings }) {
         ))}
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-white/10 bg-[color-mix(in_srgb,var(--ink)_88%,#000)]">
         <div className="container-site flex flex-col items-start justify-between gap-3 py-5 text-xs text-white/45 sm:flex-row sm:items-center">
-          <p>{settings.copyright}</p>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>{settings.copyright}</span>
+            <span aria-hidden className="hidden h-3 w-px bg-white/15 sm:inline-block" />
+            <span className="text-white/35">Report an error: corrections are published with a timestamp.</span>
+          </p>
           <nav className="flex flex-wrap items-center gap-4" aria-label="Footer legal">
             <Link href="/about" className="hover:text-white">
               About Us

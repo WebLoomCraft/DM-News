@@ -152,6 +152,321 @@ body {
   animation: dm-fade-up 320ms ease both;
 }
 
+/* =========================================================
+   3D BRAND EMBLEM  (components/brand/Logo3D + BrandMark)
+   ========================================================= */
+.logo3d {
+  perspective: 720px;
+  perspective-origin: 50% 45%;
+}
+/* the floating emblem used to measure wider than the flex row, which pushed
+   the header actions past the viewport on narrow phones */
+.logo3d {
+  contain: layout paint;
+}
+.logo3d-scene {
+  transform-style: preserve-3d;
+}
+/* Clip only horizontally: the idle sway used to nudge the header actions past
+   the viewport on narrow phones, while orbit rings could vanish off the left
+   edge of the hero. Vertical bloom/shadow must stay visible. */
+.logo3d--header .logo3d-scene,
+.logo3d--compact .logo3d-scene {
+  overflow-x: clip;
+  overflow-y: visible;
+  padding: 3px 3px 0 3px;
+}
+.logo3d--header .logo3d-badge,
+.logo3d--compact .logo3d-badge {
+  margin: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + 6px);
+}
+
+/* --- the tilting badge --- */
+.logo3d-badge {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 6px 12px rgba(4, 12, 26, 0.22));
+}
+.logo3d-badge--live {
+  animation:
+    logo3d-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    logo3d-float 7s ease-in-out 900ms infinite,
+    logo3d-sway 11s ease-in-out 900ms infinite;
+}
+.logo3d:hover .logo3d-badge--live,
+.logo3d:focus-visible .logo3d-badge--live {
+  animation-play-state: paused;
+}
+.logo3d-badge--press {
+  scale: 0.96;
+}
+
+/* moving specular highlight that tracks the pointer */
+.logo3d-sheen {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 22%;
+  background:
+    radial-gradient(circle at var(--gx, 38%) var(--gy, 22%), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 58%);
+  mix-blend-mode: soft-light;
+  opacity: 0.9;
+  transition: background-position 200ms linear;
+}
+/* periodic light sweep across the metal */
+.logo3d-badge--live .logo3d-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22%;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.55) 48%, transparent 64%);
+  background-size: 260% 260%;
+  mix-blend-mode: screen;
+  animation: logo3d-sweep 6.5s ease-in-out 1.2s infinite;
+}
+
+/* --- wordmark --- */
+.logo3d-word {
+  position: relative;
+  transition: color 200ms ease;
+}
+.logo3d-word-accent {
+  color: var(--accent);
+  display: inline-block;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.logo3d:hover .logo3d-word-accent {
+  transform: translateY(-3px);
+}
+.logo3d--hero .logo3d-word {
+  letter-spacing: -0.02em;
+}
+.logo3d-words {
+  perspective: 400px;
+}
+/* From tablet up the lockup has room: never let the animated emblem's
+   transform squeeze the wordmark into a two-line wrap. Below that width the
+   header relies on shrink so nothing overflows a 390px phone. */
+@media (min-width: 768px) {
+  .logo3d-words {
+    flex: 0 0 auto;
+  }
+}
+/* The header tagline is a single wide line; without a guaranteed content
+   width the shrinking lockup clipped it to "INDEPENDENT NEWSROOI". */
+.logo3d--header .logo3d-words {
+  flex: 0 0 auto;
+  max-width: none;
+}
+/* A 390px phone can only give the tagline ~210px, so tighten it there rather
+   than let the last letters fall off the edge. */
+@media (max-width: 639px) {
+  .logo3d--header .logo3d-word {
+    font-size: 1.05rem;
+  }
+  .logo3d--header .logo3d-words .kicker {
+    font-size: 0.5rem !important;
+    letter-spacing: 0.08em !important;
+  }
+}
+
+/* --- hero orbit rings --- */
+.logo3d-ring {
+  position: absolute;
+  inset: -16%;
+  border-radius: 50%;
+  pointer-events: none;
+  transform-style: flat;
+}
+.logo3d-ring--outer {
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  animation: logo3d-orbit 26s linear infinite;
+}
+.logo3d-ring--inner {
+  inset: -7%;
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
+  border-top-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  animation: logo3d-orbit 16s linear infinite reverse;
+}
+.logo3d--hero:hover .logo3d-ring--outer,
+.logo3d--hero:hover .logo3d-ring--inner {
+  animation-duration: 8s;
+}
+
+@keyframes logo3d-in {
+  0% {
+    opacity: 0;
+    transform: rotateX(46deg) rotateY(-42deg) translateY(14px) scale(0.82);
+  }
+  55% {
+    opacity: 1;
+  }
+  70% {
+    transform: rotateX(-6deg) rotateY(6deg) translateY(-3px) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0) rotateY(0) translateY(0) scale(1);
+  }
+}
+@keyframes logo3d-float {
+  0%,
+  100% {
+    translate: 0 0;
+    filter: drop-shadow(0 8px 14px rgba(4, 12, 26, 0.3));
+  }
+  50% {
+    translate: 0 -3px;
+    filter: drop-shadow(0 14px 20px rgba(4, 12, 26, 0.24));
+  }
+}
+@keyframes logo3d-sway {
+  0%,
+  100% {
+    rotate: y 0deg;
+  }
+  35% {
+    rotate: y 9deg;
+  }
+  70% {
+    rotate: y -7deg;
+  }
+}
+@keyframes logo3d-sweep {
+  0%,
+  62% {
+    background-position: 180% 0;
+    opacity: 0;
+  }
+  68% {
+    opacity: 1;
+  }
+  86%,
+  100% {
+    background-position: -80% 0;
+    opacity: 0;
+  }
+}
+@keyframes logo3d-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* masthead: full hero emblem on desktop, compact on phones */
+@media (max-width: 639px) {
+  .logo3d--masthead .logo3d-scene {
+    height: 92px !important;
+    width: 92px !important;
+  }
+  .logo3d--masthead .logo3d-word {
+    font-size: 1.35rem !important;
+  }
+  .logo3d--masthead {
+    align-items: center !important;
+    gap: 0.65rem !important;
+  }
+  .logo3d--masthead .logo3d-words {
+    text-align: left;
+  }
+  .logo3d--masthead .logo3d-ring--outer {
+    inset: -10%;
+  }
+  .logo3d--masthead .logo3d-ring--inner {
+    inset: -4%;
+  }
+}
+
+/* showcase: emblem only, no repeated wordmark */
+.logo3d--showcase > span:last-child {
+  display: none;
+}
+/* the About card has room — give the emblem real presence */
+.logo3d--showcase .logo3d-scene {
+  height: 168px !important;
+  width: 168px !important;
+}
+@media (min-width: 640px) {
+  .logo3d--showcase .logo3d-scene {
+    height: 208px !important;
+    width: 208px !important;
+  }
+}
+/* the dashed orbit ring is inset -16%, which lands outside the card's clip on
+   a phone — pull it in so the full ring stays visible */
+.logo3d--showcase .logo3d-ring--outer {
+  inset: -4%;
+}
+
+/* static fallback: no intro, no float, no sway */
+.logo3d--static .logo3d-badge,
+.logo3d--static .logo3d-ring {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo3d-badge,
+  .logo3d-badge--live,
+  .logo3d-badge--live .logo3d-sheen::after,
+  .logo3d-ring {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* =========================================================
+   HERO MASTHEAD
+   ========================================================= */
+.hero-shell {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f7f8fa 58%, #f5f6f8 100%);
+}
+.hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(11, 27, 51, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 27, 51, 0.055) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(ellipse 78% 65% at 30% 0%, #000 35%, transparent 78%);
+}
+
+.hero-eyebrow {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-copy > * {
+  animation: hero-rise 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-copy > *:nth-child(2) {
+  animation-delay: 80ms;
+}
+.hero-copy > *:nth-child(3) {
+  animation-delay: 150ms;
+}
+.hero-copy > *:nth-child(4) {
+  animation-delay: 220ms;
+}
+.hero-copy > *:nth-child(5) {
+  animation-delay: 290ms;
+}
+.hero-lead {
+  animation: hero-rise 720ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
 /* ---------- Article body ---------- */
 .article-body {
   font-family: var(--font-display);

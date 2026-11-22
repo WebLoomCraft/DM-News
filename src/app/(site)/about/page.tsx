@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/settings";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { getActiveCategories } from "@/lib/queries";
 import { SectionHeading } from "@/components/site/SectionHeading";
+import { Logo3D } from "@/components/brand/Logo3D";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +21,34 @@ export default async function AboutPage() {
 
   return (
     <div className="container-site py-10">
-      <header className="mb-8 border-b-2 border-[var(--ink)] pb-5">
-        <p className="kicker text-[var(--accent)]">About</p>
+      <header className="mb-8 border-b-2 border-[var(--ink)] pb-6">
+        <p className="kicker text-[var(--accent)]">About the network</p>
         <h1 className="headline mt-1 text-[clamp(2rem,5vw,2.9rem)]">{settings.siteName}</h1>
         {settings.tagline ? <p className="mt-2 font-display text-lg text-[#4a5563]">{settings.tagline}</p> : null}
       </header>
+
+      <section className="mb-10 grid items-center gap-8 overflow-hidden border border-[#e3e7ee] bg-[linear-gradient(135deg,#fbfcfe,#eef2f7)] p-6 sm:p-8 lg:grid-cols-[auto_1fr]">
+        <div className="flex justify-center px-6">
+          <Logo3D
+            variant="hero"
+            href={undefined}
+            wordmark={settings.logoWordmark || settings.siteName}
+            tagline={settings.tagline || "Independent · Verified · 24/7"}
+            className="logo3d--showcase"
+          />
+        </div>
+        <div>
+          <p className="kicker text-[var(--accent)]">The brand mark</p>
+          <h2 className="headline mt-2 text-[1.4rem] sm:text-[1.7rem]">A three-dimensional take on the DM monogram</h2>
+          <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-[#4a5563]">
+            The emblem is a brushed gun-metal badge around the network initials, extruded in depth with the red accent bar
+            beneath. On the site it reacts to your pointer, drifts gently while idle and settles completely still when your
+            device asks for reduced motion.
+          </p>
+        </div>
+      </section>
+
+
 
       <div className="grid gap-10 lg:grid-cols-[1.7fr_1fr]">
         <div>
