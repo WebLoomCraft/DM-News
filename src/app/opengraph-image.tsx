@@ -77,7 +77,7 @@ export default async function OpengraphImage() {
             Breaking news from Pakistan and the world
           </span>
           <span style={{ fontSize: 28, color: "rgba(255,255,255,0.65)" }}>
-            Politics · Business · Technology · Sport · Culture · Live video
+            Politics · Business · Technology · Sport · Culture · Watch live
           </span>
         </div>
 

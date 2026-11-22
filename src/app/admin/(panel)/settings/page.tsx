@@ -539,7 +539,7 @@ export default function SettingsPage() {
           <Panel title="Advertising">
             <div className="space-y-4">
               <Toggle checked={settings.showAdSlots} onChange={(v) => set("showAdSlots", v)} label="Show advertising slots" description="Clearly separated from editorial content." />
-              <Field label="Ad slot HTML" hint="Paste responsive ad code. Scripts and images are sanitised; iframes are limited to trusted video hosts.">
+              <Field label="Ad slot HTML" hint="Paste responsive ad code. Scripts and images are sanitised; iframes are limited to trusted embed hosts.">
                 <Textarea value={str(settings.adSlotHtml)} onChange={(e) => set("adSlotHtml", e.target.value || null)} className="font-mono text-xs" />
               </Field>
             </div>

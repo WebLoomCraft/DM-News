@@ -10,7 +10,6 @@ import {
   siteSettings,
   tags,
   users,
-  videos,
 } from "@/db/schema";
 import { DEFAULT_FOOTER_COLUMNS, DEFAULT_NAV, getSettings, invalidateSettingsCache } from "./settings";
 import { slugify } from "./utils";
@@ -103,12 +102,12 @@ const ARTICLE_SEEDS: SeedArticle[] = [
     body: [
       "DM News Network is now publishing around the clock from a single digital newsroom, combining national reporting with dedicated desks for world affairs, politics, business, technology, sport and entertainment.",
       "Every story that appears on this site passes through the same verification checklist: sourcing, right-of-reply where applicable, caption accuracy and a final read by the duty editor before publication.",
-      "Readers can follow the desk on Facebook and TikTok, watch video reports in the Videos section, and subscribe to the evening briefing newsletter for a single daily digest.",
+      "Readers can follow the desk on Facebook and TikTok, watch the live bulletin, and subscribe to the evening briefing newsletter for a single daily digest.",
     ],
     bullets: [
       "Continuous publishing across seven sections",
       "Editor-verified sourcing on every story",
-      "Video reports and live stream support built in",
+      "Live stream and image-rich reporting built in",
     ],
     quote: "Speed matters, but accuracy matters more. We publish when we are sure.",
     tags: ["Pakistan", "Education"],
@@ -380,37 +379,6 @@ const ARTICLE_SEEDS: SeedArticle[] = [
   },
 ];
 
-const VIDEO_SEED = [
-  {
-    title: "Evening commute: traffic patterns across the capital",
-    url: "https://videos.pexels.com/video-files/12138808/12138808-hd_1920_1080_30fps.mp4",
-    thumb: "https://images.pexels.com/videos/12138808/pexels-photo-12138808.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200",
-    kind: "report",
-    description: "Our transport desk tracks how peak-hour flow has changed across major arterial roads.",
-  },
-  {
-    title: "On the ground: pedestrian crossings and city footfall",
-    url: "https://videos.pexels.com/video-files/39174355/16669579_1920_1080_25fps.mp4",
-    thumb: "https://images.pexels.com/videos/39174355/auckland-bustling-city-busy-city-city-39174355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200",
-    kind: "clip",
-    description: "Short clip from our urban safety report on pedestrian infrastructure.",
-  },
-  {
-    title: "World watch: the busiest intersections, explained",
-    url: "https://videos.pexels.com/video-files/35488300/15034376_3840_2160_60fps.mp4",
-    thumb: "https://images.pexels.com/videos/35488300/crossing-japan-people-crowd-time-lapse-35488300.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200",
-    kind: "report",
-    description: "How traffic engineers measure flow at high-volume crossings.",
-  },
-  {
-    title: "Interview: what newsroom verification looks like in practice",
-    url: "https://videos.pexels.com/video-files/39174360/16669575_1920_1080_25fps.mp4",
-    thumb: "https://images.pexels.com/videos/39174360/auckland-bustling-city-busy-city-city-39174360.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200",
-    kind: "interview",
-    description: "A conversation with our duty editor about sourcing, captions and corrections.",
-  },
-];
-
 function buildBody(seed: SeedArticle): string {
   const parts: string[] = [];
   parts.push(`<p>${seed.body[0]}</p>`);
@@ -554,21 +522,6 @@ export async function ensureSeeded(): Promise<{ seeded: boolean; reason?: string
     if (linkRows.length) await db.insert(articleTags).values(linkRows);
   }
 
-  // Videos
-  for (let i = 0; i < VIDEO_SEED.length; i++) {
-    const v = VIDEO_SEED[i]!;
-    await db.insert(videos).values({
-      title: v.title,
-      youtubeUrl: v.url,
-      youtubeId: null,
-      thumbnailUrl: v.thumb,
-      description: v.description,
-      kind: v.kind,
-      orderIndex: i,
-      publishedAt: hoursAgoDate(i * 7 + 3),
-    });
-  }
-
   return { seeded: true };
 }
 
@@ -582,7 +535,6 @@ export const DEFAULT_SECTIONS = [
   { key: "category:technology", title: "Technology", orderIndex: 7, layout: "row", limit: 4, category: "technology" },
   { key: "category:sports", title: "Sports", orderIndex: 8, layout: "row", limit: 4, category: "sports" },
   { key: "category:entertainment", title: "Entertainment", orderIndex: 9, layout: "row", limit: 4, category: "entertainment" },
-  { key: "videos", title: "Video Reports", orderIndex: 10, layout: "videos", limit: 4 },
   { key: "live", title: "Watch Live", orderIndex: 11, layout: "live", limit: 1 },
   { key: "social", title: "Follow DM News Network", orderIndex: 12, layout: "social", limit: 3 },
   { key: "newsletter", title: "The DM Evening Briefing", orderIndex: 13, layout: "newsletter", limit: 1 },

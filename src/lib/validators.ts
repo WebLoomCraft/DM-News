@@ -78,17 +78,6 @@ export const authorSchema = z.object({
   userId: z.number().int().positive().nullable().optional(),
 });
 
-export const videoSchema = z.object({
-  title: z.string().trim().min(3).max(260),
-  youtubeUrl: z.string().trim().min(3).max(1000),
-  thumbnailUrl: nullableString(2000),
-  description: nullableString(600),
-  kind: z.enum(["report", "interview", "clip", "live"]).optional(),
-  isLive: z.boolean().optional(),
-  orderIndex: z.number().int().min(0).max(999).optional(),
-  publishedAt: z.string().trim().max(40).nullable().optional(),
-});
-
 export const userSchema = z.object({
   name: z.string().trim().min(2).max(160),
   email: z.string().trim().min(3).max(200),

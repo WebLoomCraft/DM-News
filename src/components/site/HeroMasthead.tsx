@@ -82,10 +82,10 @@ export function HeroMasthead({
               </Link>
             ) : (
               <Link
-                href="/videos"
+                href="/latest"
                 className="inline-flex items-center gap-2 border border-[#cfd6e1] bg-white/70 px-5 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[#2c3644] transition-colors hover:border-[var(--ink)] hover:text-[var(--ink)]"
               >
-                Video reports
+                Today&rsquo;s briefing
               </Link>
             )}
           </div>

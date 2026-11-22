@@ -7,7 +7,6 @@ import {
   dailyStats,
   homepageSections,
   tags,
-  videos,
 } from "@/db/schema";
 import { and, asc, count, desc, eq, ilike, inArray, isNotNull, lt, lte, ne, notInArray, or, sql } from "drizzle-orm";
 
@@ -386,14 +385,6 @@ export async function getPopularTags(limit = 14) {
     .orderBy(desc(count(articleTags.articleId)), asc(tags.name))
     .limit(limit);
   return rows;
-}
-
-export async function getVideoItems(limit = 8) {
-  return db
-    .select()
-    .from(videos)
-    .orderBy(asc(videos.orderIndex), desc(videos.publishedAt))
-    .limit(limit);
 }
 
 export async function getHomepageSections() {

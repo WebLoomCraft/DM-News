@@ -16,7 +16,6 @@ export const DEFAULT_NAV: NavItem[] = [
   { label: "Technology", href: "/category/technology" },
   { label: "Sports", href: "/category/sports" },
   { label: "Entertainment", href: "/category/entertainment" },
-  { label: "Videos", href: "/videos" },
   { label: "About Us", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
@@ -37,7 +36,7 @@ export const DEFAULT_FOOTER_COLUMNS: FooterColumn[] = [
       { label: "Technology", href: "/category/technology" },
       { label: "Sports", href: "/category/sports" },
       { label: "Entertainment", href: "/category/entertainment" },
-      { label: "Videos", href: "/videos" },
+      { label: "Watch Live", href: "/live" },
     ],
   },
   {

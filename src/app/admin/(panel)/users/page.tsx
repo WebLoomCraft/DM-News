@@ -158,7 +158,7 @@ export default function UsersPage() {
                   : role === "admin"
                     ? "All content, media, taxonomy, homepage and site settings."
                     : role === "editor"
-                      ? "Create, edit, publish and delete any article; manage media, tags and videos."
+                      ? "Create, edit, publish and delete any article; manage media and tags."
                   : "Create and edit their own drafts; publishing is configurable per account."}
               </p>
             </div>
