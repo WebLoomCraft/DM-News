@@ -4,9 +4,9 @@ import {
   getActiveCategories,
   getArticleBySlug,
   getLatestArticles,
-  getSettings,
   getTrendingArticles,
 } from "@/lib/queries";
+import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
