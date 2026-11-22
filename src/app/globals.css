@@ -256,6 +256,23 @@ body {
     flex: 0 0 auto;
   }
 }
+/* The header tagline is a single wide line; without a guaranteed content
+   width the shrinking lockup clipped it to "INDEPENDENT NEWSROOI". */
+.logo3d--header .logo3d-words {
+  flex: 0 0 auto;
+  max-width: none;
+}
+/* A 390px phone can only give the tagline ~210px, so tighten it there rather
+   than let the last letters fall off the edge. */
+@media (max-width: 639px) {
+  .logo3d--header .logo3d-word {
+    font-size: 1.05rem;
+  }
+  .logo3d--header .logo3d-words .kicker {
+    font-size: 0.5rem !important;
+    letter-spacing: 0.08em !important;
+  }
+}
 
 /* --- hero orbit rings --- */
 .logo3d-ring {
@@ -378,6 +395,11 @@ body {
     height: 208px !important;
     width: 208px !important;
   }
+}
+/* the dashed orbit ring is inset -16%, which lands outside the card's clip on
+   a phone — pull it in so the full ring stays visible */
+.logo3d--showcase .logo3d-ring--outer {
+  inset: -4%;
 }
 
 /* static fallback: no intro, no float, no sway */

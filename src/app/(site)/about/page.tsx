@@ -28,7 +28,7 @@ export default async function AboutPage() {
       </header>
 
       <section className="mb-10 grid items-center gap-8 overflow-hidden border border-[#e3e7ee] bg-[linear-gradient(135deg,#fbfcfe,#eef2f7)] p-6 sm:p-8 lg:grid-cols-[auto_1fr]">
-        <div className="justify-self-center">
+        <div className="flex justify-center px-6">
           <Logo3D
             variant="hero"
             href={undefined}
