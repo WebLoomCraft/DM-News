@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Facebook, Instagram, Menu, Radio, Search, X, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo3D } from "@/components/brand/Logo3D";
 
 export type NavItem = { label: string; href: string; enabled?: boolean };
 
@@ -42,7 +43,9 @@ const SOCIAL_ICONS: Record<string, (props: { className?: string }) => React.Reac
   ),
 };
 
-function Logo({ data, dark }: { data: HeaderData; dark?: boolean }) {
+function Logo({ data }: { data: HeaderData }) {
+  // The 3D emblem replaces the flat image/wordmark. An admin-uploaded logoUrl
+  // still wins, so a custom brand image can be restored from Settings any time.
   if (data.logoUrl) {
     return (
       <img
@@ -55,25 +58,12 @@ function Logo({ data, dark }: { data: HeaderData; dark?: boolean }) {
     );
   }
   return (
-    <span className="flex items-center gap-2.5">
-      <span
-        className="grid h-10 w-10 shrink-0 place-items-center font-cond text-lg font-bold tracking-tight text-white sm:h-11 sm:w-11"
-        style={{ background: "var(--brand)" }}
-      >
-        <span className="relative">
-          {data.logoMarkText}
-          <span aria-hidden className="absolute -bottom-1 left-0 h-[3px] w-full" style={{ background: "var(--accent)" }} />
-        </span>
-      </span>
-      <span className="leading-none">
-        <span
-          className={cn("block font-display text-[1.15rem] font-bold tracking-[-0.01em] sm:text-[1.35rem]", dark ? "text-white" : "text-[var(--ink)]")}
-        >
-          {data.logoWordmark}
-        </span>
-        <span className="kicker mt-1 block text-[0.58rem] text-[#8b95a3]">Independent newsroom</span>
-      </span>
-    </span>
+    <Logo3D
+      href="/"
+      wordmark={data.logoWordmark || data.siteName}
+      tagline="Independent newsroom"
+      variant="header"
+    />
   );
 }
 
@@ -85,6 +75,7 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
   const [term, setTerm] = useState("");
   const [now, setNow] = useState<string>("");
   const [lang, setLang] = useState<string>("en");
+  const [scrolled, setScrolled] = useState(false);
 
   const nav = useMemo(() => data.nav.filter((n) => n.enabled !== false), [data.nav]);
 
@@ -92,6 +83,18 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
     setMenuOpen(false);
     setSearchOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 24);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      document.documentElement.style.setProperty("--dm-scroll", progress.toFixed(4));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const cookieLang = document.cookie.split("; ").find((c) => c.startsWith("dm_lang="))?.split("=")[1];
@@ -187,13 +190,18 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
       </div>
 
       {/* ---------- Main header ---------- */}
-      <header className="sticky top-0 z-40 border-b border-[#e3e7ee] bg-white/97 backdrop-blur">
-        <div className="container-site flex h-16 items-center justify-between gap-4 md:h-[84px]">
-          <Link href="/" aria-label={`${data.siteName} home`} className="shrink-0">
+      <header
+        className={cn(
+          "sticky top-0 z-40 border-b bg-white/97 backdrop-blur transition-[border-color,box-shadow] duration-300",
+          scrolled ? "border-[#e3e7ee] shadow-[0_10px_28px_-20px_rgba(7,16,31,0.6)]" : "border-[#e3e7ee]",
+        )}
+      >
+        <div className={cn("container-site flex items-center justify-between gap-3 transition-[height] duration-300 sm:gap-4", scrolled ? "h-[62px] md:h-[70px]" : "h-16 md:h-[84px]")}>
+          <div className="min-w-0 shrink [@media(min-width:768px)]:shrink-0">
             <Logo data={data} />
-          </Link>
+          </div>
 
-          <nav className="hidden items-center gap-1 xl:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary">
             {nav.slice(0, 9).map((item) => {
               const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               return (
@@ -201,7 +209,7 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
                   key={item.href + item.label}
                   href={item.href}
                   className={cn(
-                    "kicker relative px-2.5 py-2 text-[0.72rem] transition-colors",
+                    "kicker relative whitespace-nowrap px-2 py-2 text-[0.68rem] transition-colors xl:px-2.5 xl:text-[0.72rem]",
                     active ? "text-[var(--accent)]" : "text-[#2c3644] hover:text-[var(--accent)]",
                   )}
                 >
@@ -212,7 +220,7 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {data.showSearchIcon ? (
               <button
                 type="button"
@@ -227,7 +235,7 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
             {data.showWatchLiveButton && liveHref ? (
               <Link
                 href={liveHref}
-                className="hidden items-center gap-2 bg-[var(--accent)] px-3.5 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white transition-opacity hover:opacity-90 sm:flex"
+                className="hidden items-center gap-2 whitespace-nowrap bg-[var(--accent)] px-3.5 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white transition-opacity hover:opacity-90 xl:flex"
               >
                 <span aria-hidden className="live-dot inline-block h-2 w-2 rounded-full bg-white" />
                 {data.watchLiveLabel}
@@ -237,7 +245,7 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
               type="button"
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              className="grid h-9 w-9 place-items-center border border-[#e3e7ee] text-[#2c3644] xl:hidden"
+              className="grid h-9 w-9 place-items-center border border-[#e3e7ee] text-[#2c3644] lg:hidden"
             >
               <Menu className="h-4 w-4" />
             </button>
@@ -263,8 +271,8 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
           </div>
         ) : null}
 
-        {/* Secondary nav strip on smaller desktops */}
-        <div className="hidden border-t border-[#eef0f4] xl:block">
+        {/* Secondary nav strip on larger desktops */}
+        <div className={cn("hidden border-t border-[#eef0f4] lg:block", scrolled && "lg:hidden")}>
           <div className="container-site flex items-center gap-5 overflow-x-auto py-2">
             {nav.slice(9).map((item) => (
               <Link
@@ -282,11 +290,16 @@ export default function SiteHeader({ data }: { data: HeaderData }) {
             ) : null}
           </div>
         </div>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left bg-[linear-gradient(90deg,var(--accent),color-mix(in_srgb,var(--accent)_40%,transparent))] transition-transform duration-150"
+          style={{ transform: "scaleX(var(--dm-scroll,0))" }}
+        />
       </header>
 
       {/* ---------- Mobile drawer ---------- */}
       {menuOpen ? (
-        <div className="fixed inset-0 z-50 xl:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" aria-label="Close menu" className="absolute inset-0 bg-[rgba(7,16,31,0.55)]" onClick={() => setMenuOpen(false)} />
           <div className="fade-up absolute inset-y-0 right-0 flex w-[86%] max-w-sm flex-col bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#e7eaf0] px-4 py-3">

@@ -6,14 +6,37 @@ Everything is wired end to end: publish an article in the admin panel and it app
 
 ---
 
+## 0. Brand: the animated 3D emblem
+
+The flat logo has been replaced by a **3D animated emblem** (`src/components/brand/`):
+
+* `BrandMark.tsx` — a pure-SVG, extruded "DM" badge: brushed gun-metal bezel, navy face,
+  metallic letter edges, red base plates and a neon accent bar. All colours derive from the
+  live theme (`--brand` / `--accent`) so it follows the colours saved in Admin → Settings.
+* `Logo3D.tsx` — the animated lockup. It flips into place on mount, floats and sways gently
+  while idle, tilts toward the pointer, runs a specular sweep across the metal every few
+  seconds, and settles completely still when the OS asks for reduced motion. The hero
+  variant adds two orbit rings.
+* Static export for social/OG, app icon and print: `public/brand/logo-3d.jpg`,
+  `logo-3d-512.png`, `logo-3d-180.png` and `src/app/icon.svg`.
+
+Where it appears: site header, homepage masthead (hero), About page brand showcase,
+footer and the generated Open Graph card.
+
+> An uploaded `logoUrl` in Admin → Settings still takes priority over the emblem, so a
+> custom brand image can be restored at any time.
+
+---
+
 ## 1. Quick start
 
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Configure the database (already present in this project)
-#    .env → DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/app_db
+# 2. Configure the database (Supabase in production)
+#    .env → DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+#    (see section 3 — the app enables TLS automatically for remote hosts)
 
 # 3. Create the schema
 npx drizzle-kit push
@@ -57,14 +80,25 @@ Hide the credential panel on the login screen with `NEXT_PUBLIC_SHOW_DEMO_CREDEN
 | `DATABASE_URL` | **yes** | PostgreSQL connection string used by Drizzle. |
 | `AUTH_SECRET` | recommended | Secret for signing the session JWT (HS256). A deterministic fallback derived from `DATABASE_URL` is used when unset — always set this in production. |
 | `NEXT_PUBLIC_SITE_URL` / `siteUrl` setting | optional | Canonical origin for sitemap, canonicals and Open Graph. When unset the request host is used automatically. |
+| `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` | optional | Enables Supabase Storage for media (see below). |
+| `SUPABASE_SERVICE_ROLE_KEY` | optional | Server-only key used to upload media to the storage bucket. |
+| `SUPABASE_STORAGE_BUCKET` | optional | Bucket name, defaults to `media` (must exist and be public). |
+| `PG_POOL_MAX` | optional | Per-instance Postgres pool size, defaults to 5 (safe for serverless). |
 | `RESEND_API_KEY` (+ optional `MAIL_FROM`) | optional | Enables real password-reset emails. Without a mail provider the reset link is returned in the API response so the flow still works. |
 | `SMTP_HOST` / `MAILER_SEND_KEY` | optional | Detected as "mail configured" and suppresses the returned reset link. |
 | `NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS` | optional | Set to `false` to hide the seeded-account panel on `/admin/login`. |
 
 Media storage: uploads are written to `./uploads` on the server and streamed through
-`/api/media/file/<filename>` with immutable cache headers and a strict CSP. To move to cloud
-storage (S3/R2/Supabase), change `saveUpload()` in `src/lib/media-storage.ts` to push to the bucket
-and return the public URL — nothing else needs to change.
+`/api/media/file/<filename>` with immutable cache headers and a strict CSP.
+
+**On Vercel the filesystem is ephemeral**, so when `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
+are set the same `saveUpload()` helper pushes the binary to a public Supabase Storage bucket
+(`media`) and returns its CDN URL. No other code changes are required — create the bucket once:
+
+```sql
+insert into storage.buckets (id, name, public) values ('media','media',true)
+on conflict (id) do update set public = true;
+```
 
 ---
 
