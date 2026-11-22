@@ -248,13 +248,13 @@ body {
 .logo3d-words {
   perspective: 400px;
 }
-/* the emblem's float/sway animation must never squeeze the wordmark */
-.logo3d-words {
-  flex: 0 0 auto;
-}
-.logo3d--header .logo3d-words {
-  flex: 0 0 auto;
-  max-width: none;
+/* From tablet up the lockup has room: never let the animated emblem's
+   transform squeeze the wordmark into a two-line wrap. Below that width the
+   header relies on shrink so nothing overflows a 390px phone. */
+@media (min-width: 768px) {
+  .logo3d-words {
+    flex: 0 0 auto;
+  }
 }
 
 /* --- hero orbit rings --- */
@@ -367,6 +367,17 @@ body {
 /* showcase: emblem only, no repeated wordmark */
 .logo3d--showcase > span:last-child {
   display: none;
+}
+/* the About card has room — give the emblem real presence */
+.logo3d--showcase .logo3d-scene {
+  height: 168px !important;
+  width: 168px !important;
+}
+@media (min-width: 640px) {
+  .logo3d--showcase .logo3d-scene {
+    height: 208px !important;
+    width: 208px !important;
+  }
 }
 
 /* static fallback: no intro, no float, no sway */
