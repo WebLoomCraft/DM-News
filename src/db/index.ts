@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import fs from "node:fs";
 import { Pool, type PoolConfig } from "pg";
+import { SUPABASE_ROOT_CA_PEM } from "@/lib/db-ca";
 import { isProduction } from "@/lib/config";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -30,6 +31,17 @@ function resolveConnectionString(raw: string): string {
     if (isSupabasePooler && !isTransactionMode) {
       url.port = "6543";
       url.searchParams.set("pgbouncer", "true");
+    }
+
+    /*
+     * pg builds its config as `Object.assign({}, config, parse(connectionString))`,
+     * so an `sslmode` in the DSN silently overwrites the explicit `ssl` option
+     * below. `sslmode=require` is interpreted by node-postgres as full
+     * verification, which fails against the provider's private root. Dropping
+     * the TLS query parameters keeps the DSN from overriding verified TLS.
+     */
+    for (const key of ["sslmode", "uselibpqcompat", "sslrootcert", "sslcert", "sslkey"]) {
+      url.searchParams.delete(key);
     }
     return url.toString();
   } catch {
@@ -62,6 +74,18 @@ const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTI
  * public CA, so the system trust store is enough. For a private CA, supply the
  * PEM (or a path to it) in DATABASE_CA_CERT.
  */
+/**
+ * Supabase signs database certificates with its own root CA ("Supabase Root
+ * 2021 CA"), which is not in Node's trust store. Verification therefore fails
+ * with UNABLE_TO_VERIFY_LEAF_SIGNATURE / SELF_SIGNED_CERT_IN_CHAIN once
+ * `rejectUnauthorized` is on — which would take the whole site down.
+ *
+ * The answer is NOT to disable verification (that re-opens the original
+ * vulnerability: any interceptor could present any certificate). Instead the
+ * provider CA is bundled so the chain can be verified against the real root.
+ * The certificate is public, pinned in the repo, and its SHA-256 fingerprint is
+ * 80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA
+ */
 function buildSslConfig(): PoolConfig["ssl"] {
   if (isLocalHost) return undefined;
 
@@ -76,14 +100,24 @@ function buildSslConfig(): PoolConfig["ssl"] {
     return undefined;
   }
 
-  const caRaw = (process.env.DATABASE_CA_CERT || "").trim();
-  if (caRaw) {
-    // Accept either the PEM itself or a filesystem path to it.
-    const ca = caRaw.includes("BEGIN CERTIFICATE") ? caRaw.replace(/\\n/g, "\n") : fs.readFileSync(caRaw, "utf8");
+  /*
+   * Anchor verification on the provider root rather than trusting whatever
+   * chain the peer presents. DATABASE_CA_CERT overrides for other providers.
+   *
+   * `rejectUnauthorized: true` stays on: the connection is encrypted AND the
+   * server's identity is checked. Disabling verification here would restore the
+   * original vulnerability.
+   */
+  const configuredCa = (process.env.DATABASE_CA_CERT || "").trim();
+  if (configuredCa) {
+    const ca = configuredCa.includes("BEGIN CERTIFICATE")
+      ? configuredCa.replace(/\\n/g, "\n")
+      : fs.readFileSync(configuredCa, "utf8");
     return { ca, rejectUnauthorized: true };
   }
 
-  return { rejectUnauthorized: true };
+  const usesSupabase = connectionString.includes("supabase.co") || connectionString.includes("supabase.com");
+  return usesSupabase ? { ca: SUPABASE_ROOT_CA_PEM, rejectUnauthorized: true } : { rejectUnauthorized: true };
 }
 
 /**
