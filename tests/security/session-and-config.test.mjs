@@ -155,3 +155,55 @@ test("VULN-08: session version changes invalidate old tokens", async () => {
   assert.equal(fresh.sessionVersion, 2);
   assert.notEqual(old.sessionVersion, fresh.sessionVersion, "version must be carried in the token");
 });
+
+test("VULN-04: database TLS is verified, anchored on the provider root", async () => {
+  /*
+   * Run in a child process: db/index.ts caches its pool at import time and the
+   * suite's bootstrap already imported it with a localhost DSN, which correctly
+   * gets no TLS. A fresh process is the only faithful way to observe the
+   * production configuration.
+   */
+  const { execFileSync } = await import("node:child_process");
+  const script = `
+    process.env.DATABASE_URL =
+      "postgresql://postgres.ref:pw@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?sslmode=require&sslrootcert=/tmp/nope";
+    delete process.env.DATABASE_CA_CERT;
+    delete process.env.PGSSLMODE;
+    const { pool } = await import("./src/db/index.ts");
+    const ssl = pool.options.ssl;
+    const url = new URL(pool.options.connectionString);
+    console.log(JSON.stringify({
+      rejectUnauthorized: ssl?.rejectUnauthorized,
+      ca: String(ssl?.ca || ""),
+      sslmode: url.searchParams.get("sslmode"),
+      sslrootcert: url.searchParams.get("sslrootcert"),
+      port: url.port,
+    }));
+  `;
+
+  const out = execFileSync(
+    process.execPath,
+    ["--import", "tsx", "-e", script],
+    { cwd: new URL("../..", import.meta.url).pathname, encoding: "utf8", timeout: 60_000 },
+  );
+  const result = JSON.parse(out.trim().split("\n").pop());
+
+  // Verification must be ON. Disabling it was the original vulnerability:
+  // any interceptor could present any certificate and read every query.
+  assert.equal(result.rejectUnauthorized, true, "TLS certificate verification must stay enabled");
+
+  // ...and anchored on the provider root, otherwise verified TLS fails against
+  // Supabase's private CA and every DB-backed page 500s.
+  const { X509Certificate } = await import("node:crypto");
+  const ca = new X509Certificate(result.ca);
+  assert.match(ca.subject, /Supabase Root 2021 CA/);
+  assert.equal(ca.ca, true, "the pinned certificate must itself be a CA");
+
+  // A sslmode/sslrootcert in the DSN must not override the explicit ssl option
+  // (pg does Object.assign(config, parse(dsn))).
+  assert.equal(result.sslmode, null);
+  assert.equal(result.sslrootcert, null);
+
+  // Serverless must use the transaction pooler, not session mode.
+  assert.equal(result.port, "6543");
+});
