@@ -15,6 +15,13 @@
       "when": 1795354043665,
       "tag": "0001_retire_videos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795676777741,
+      "tag": "0002_security_hardening",
+      "breakpoints": true
     }
   ]
 }

@@ -77,16 +77,25 @@ Hide the credential panel on the login screen with `NEXT_PUBLIC_SHOW_DEMO_CREDEN
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `DATABASE_URL` | **yes** | PostgreSQL connection string used by Drizzle. |
-| `AUTH_SECRET` | recommended | Secret for signing the session JWT (HS256). A deterministic fallback derived from `DATABASE_URL` is used when unset — always set this in production. |
-| `NEXT_PUBLIC_SITE_URL` / `siteUrl` setting | optional | Canonical origin for sitemap, canonicals and Open Graph. When unset the request host is used automatically. |
+| `DATABASE_URL` | **yes** | PostgreSQL connection string used by Drizzle. Remote hosts require TLS with certificate verification. |
+| `AUTH_SECRET` | **yes in production** | Signs session JWTs (HS256). **Minimum 32 characters, high entropy.** The app refuses to start in production without it — there is no fallback derived from `DATABASE_URL` or anything else. Generate with `openssl rand -base64 48`. |
+| `SITE_URL` | **yes in production** | Canonical public origin (e.g. `https://dm-news.vercel.app`). Password-reset links are built from this value only — never from the request `Origin`/`Host`. Must be `https` in production. |
+| `DATABASE_CA_CERT` | optional | PEM contents (or a path) for a private database CA. Managed providers with public CAs need nothing. |
+| `TRUSTED_PROXY_HOPS` | optional | Number of proxies in front of the app that append to `X-Forwarded-For`. Defaults to `1` in production (Vercel). Set `0` if the app is directly exposed. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | optional | Shared rate-limit store so limits hold across serverless instances. Without it limits are per-instance; login lockout stays global because it is database-backed. |
+| `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` | optional, **one-time** | Creates the first `super_admin` on an empty production database. Password must be ≥12 characters. Remove both variables after the first deploy. |
+| `AD_SCRIPT_ALLOWLIST` / `CSP_EXTRA_SCRIPT_SRC` | optional | Extra allowlisted hosts for ad/analytics `<script src>` and CSP. Never editable from the CMS. |
+| `SESSION_MAX_AGE_SECONDS` | optional | Session lifetime, default 8 hours (was 7 days). |
 | `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` | optional | Enables Supabase Storage for media (see below). |
 | `SUPABASE_SERVICE_ROLE_KEY` | optional | Server-only key used to upload media to the storage bucket. |
 | `SUPABASE_STORAGE_BUCKET` | optional | Bucket name, defaults to `media` (must exist and be public). |
-| `PG_POOL_MAX` | optional | Per-instance Postgres pool size, defaults to 5 (safe for serverless). |
-| `RESEND_API_KEY` (+ optional `MAIL_FROM`) | optional | Enables real password-reset emails. Without a mail provider the reset link is returned in the API response so the flow still works. |
-| `SMTP_HOST` / `MAILER_SEND_KEY` | optional | Detected as "mail configured" and suppresses the returned reset link. |
-| `NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS` | optional | Set to `false` to hide the seeded-account panel on `/admin/login`. |
+| `PG_POOL_MAX` | optional | Per-instance Postgres pool size, defaults to 2 on serverless (10 elsewhere). |
+| `RESEND_API_KEY` (+ optional `MAIL_FROM`) | optional | Enables password-reset emails. **Without a mail provider the reset flow fails safely and never returns the token or link in the API response.** |
+| `NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS` | optional | Development only. Demo accounts exist only in non-production builds, and the panel additionally requires this to be exactly `true`. |
+
+**Security note for upgrades:** existing `AUTH_SECRET` values shorter than 32 characters, or
+deployments that previously relied on the `DATABASE_URL`-derived fallback, will now fail at
+startup. Set a real secret, then set `SITE_URL`, before deploying.
 
 Media storage: uploads are written to `./uploads` on the server and streamed through
 `/api/media/file/<filename>` with immutable cache headers and a strict CSP.

@@ -1,3 +1,4 @@
+import { toJsonLdScript } from "@/lib/sanitize";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -60,7 +61,7 @@ export default async function CategoryPage({ params }: Props) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toJsonLdScript(ld) }} />
       <div className="bg-[var(--ink)] text-white">
         <div className="container-site py-8">
           <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.12em] text-white/45">

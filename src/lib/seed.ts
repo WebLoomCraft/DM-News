@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { LIMITS } from "./config";
 import { count, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -431,16 +432,56 @@ export async function ensureSeeded(): Promise<{ seeded: boolean; reason?: string
     invalidateSettingsCache();
   }
 
-  // Users
-  const userSeed = [
-    { name: "Network Owner", email: "admin@dmnewsnetwork.com", password: "DMnews@2026", role: "super_admin", canPublish: true },
-    { name: "Newsroom Admin", email: "newsroom@dmnewsnetwork.com", password: "Newsroom@2026", role: "admin", canPublish: true },
-    { name: "Duty Editor", email: "editor@dmnewsnetwork.com", password: "Editor@2026", role: "editor", canPublish: true },
-    { name: "Staff Reporter", email: "reporter@dmnewsnetwork.com", password: "Reporter@2026", role: "author", canPublish: false },
-  ];
+  /*
+   * Users.
+   *
+   * Hard-coded administrator passwords are not seeded in production. Doing so
+   * publishes a known-valid super_admin credential to everyone with repository
+   * access, and seeding on every cold start means the account silently comes
+   * back with that password even after it is changed.
+   *
+   * Instead:
+   *  - Non-production keeps convenience demo accounts (clearly weak by design,
+   *    never shipped to a production database).
+   *  - Production provisions exactly one super administrator from
+   *    BOOTSTRAP_ADMIN_EMAIL + BOOTSTRAP_ADMIN_PASSWORD, and only when the
+   *    users table is empty.
+   */
+  const isProd = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+
+  const bootstrapEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || "").trim().toLowerCase();
+  const bootstrapPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || "";
+  const bootstrapName = (process.env.BOOTSTRAP_ADMIN_NAME || "Network Owner").trim();
+
+  type SeedUser = { name: string; email: string; password: string; role: string; canPublish: boolean };
+
+  let userSeed: SeedUser[] = [];
+  if (isProd) {
+    if (bootstrapEmail && bootstrapPassword) {
+      if (bootstrapPassword.length < 12) {
+        console.warn("[dm-news] BOOTSTRAP_ADMIN_PASSWORD is shorter than 12 characters — refusing to create the account.");
+      } else {
+        userSeed = [
+          { name: bootstrapName, email: bootstrapEmail, password: bootstrapPassword, role: "super_admin", canPublish: true },
+        ];
+      }
+    } else {
+      console.warn(
+        "[dm-news] No bootstrap administrator configured. Set BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD once to create the first super_admin, then remove them.",
+      );
+    }
+  } else {
+    userSeed = [
+      { name: "Network Owner", email: "admin@dmnewsnetwork.com", password: "DMnews@2026", role: "super_admin", canPublish: true },
+      { name: "Newsroom Admin", email: "newsroom@dmnewsnetwork.com", password: "Newsroom@2026", role: "admin", canPublish: true },
+      { name: "Duty Editor", email: "editor@dmnewsnetwork.com", password: "Editor@2026", role: "editor", canPublish: true },
+      { name: "Staff Reporter", email: "reporter@dmnewsnetwork.com", password: "Reporter@2026", role: "author", canPublish: false },
+    ];
+  }
+
   const createdUsers: Record<string, number> = {};
   for (const u of userSeed) {
-    const passwordHash = await bcrypt.hash(u.password, 10);
+    const passwordHash = await bcrypt.hash(u.password, LIMITS.bcryptRounds);
     const [row] = await db
       .insert(users)
       .values({

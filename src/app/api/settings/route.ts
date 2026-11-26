@@ -1,7 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { siteSettings } from "@/db/schema";
-import { handleApiError, ok, readJson, requireCapability } from "@/lib/api";
+import { assertSameOrigin, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
 import { settingsSchema } from "@/lib/validators";
 import { sanitizeRichText, sanitizeTrustedHtml } from "@/lib/sanitize";
 import { invalidateSettingsCache } from "@/lib/settings";
@@ -32,6 +32,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    assertSameOrigin(req);
     await requireCapability("settings.manage");
     const body = await readJson<Record<string, unknown>>(req);
     const input = settingsSchema.parse(body);

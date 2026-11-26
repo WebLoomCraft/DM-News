@@ -1,7 +1,7 @@
 import { asc, count, desc, eq, ilike } from "drizzle-orm";
 import { db } from "@/db";
 import { articleTags, tags } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability, requireUser } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability, requireUser } from "@/lib/api";
 import { tagSchema } from "@/lib/validators";
 import { sanitizePlainText } from "@/lib/sanitize";
 import { slugify } from "@/lib/utils";
@@ -27,6 +27,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    assertSameOrigin(req);
     await requireCapability("taxonomy.manage");
     const input = tagSchema.parse(await readJson(req));
     const name = sanitizePlainText(input.name);

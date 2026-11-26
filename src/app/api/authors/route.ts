@@ -1,7 +1,7 @@
 import { asc, count, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { articles, authors } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability, requireUser } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability, requireUser } from "@/lib/api";
 import { authorSchema } from "@/lib/validators";
 import { sanitizePlainText } from "@/lib/sanitize";
 import { slugify } from "@/lib/utils";
@@ -23,6 +23,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    assertSameOrigin(req);
     await requireCapability("authors.manage");
     const input = authorSchema.parse(await readJson(req));
     const name = sanitizePlainText(input.name);

@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
 import { userSchema } from "@/lib/validators";
 import { sanitizePlainText } from "@/lib/sanitize";
 import { roleLevel } from "@/lib/permissions";
@@ -33,6 +33,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    assertSameOrigin(req);
     await requireCapability("users.manage");
     const input = userSchema.parse(await readJson(req));
     const email = input.email.toLowerCase().trim();

@@ -1,7 +1,7 @@
 import { and, count, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { articles, categories } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
 import { categorySchema } from "@/lib/validators";
 import { sanitizePlainText } from "@/lib/sanitize";
 import { slugify } from "@/lib/utils";
@@ -15,6 +15,7 @@ async function find(id: number) {
 
 export async function PATCH(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     await requireCapability("taxonomy.manage");
     const { id } = await ctx.params;
     const categoryId = Number(id);
@@ -61,6 +62,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
 export async function DELETE(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     await requireCapability("taxonomy.manage");
     const { id } = await ctx.params;
     const categoryId = Number(id);

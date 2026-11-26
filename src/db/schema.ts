@@ -25,13 +25,29 @@ export const users = pgTable(
     bio: text("bio"),
     status: varchar("status", { length: 20 }).notNull().default("active"),
     canPublish: boolean("can_publish").notNull().default(false),
+    /**
+     * SHA-256 of the current reset token. A deterministic hash (not bcrypt)
+     * lets the confirm endpoint look the row up directly instead of scanning
+     * and bcrypt-comparing every user's token.
+     */
     resetTokenHash: text("reset_token_hash"),
     resetTokenExpiresAt: timestamp("reset_token_expires_at", { withTimezone: true }),
+    /**
+     * Incremented whenever existing sessions must stop working (password
+     * change/reset, suspension, privilege change). Tokens embed the value they
+     * were minted with, so a bump invalidates all of them without server state.
+     */
+    sessionVersion: integer("session_version").notNull().default(0),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("users_email_idx").on(t.email)],
+  (t) => [
+    uniqueIndex("users_email_idx").on(t.email),
+    // Reset-token confirmation looks the row up by this hash, so it must be
+    // indexed; it is also unique, which makes token collisions impossible.
+    uniqueIndex("users_reset_token_idx").on(t.resetTokenHash),
+  ],
 );
 
 export const authors = pgTable(
@@ -254,6 +270,22 @@ export const dailyStats = pgTable(
     articleViews: integer("article_views").notNull().default(0),
   },
   (t) => [uniqueIndex("daily_stats_day_idx").on(t.day)],
+);
+
+/**
+ * Shared brute-force counters for the login endpoint. Keyed by a hash of the
+ * email or IP so no plaintext identifiers are persisted.
+ */
+export const loginThrottle = pgTable(
+  "login_throttle",
+  {
+    key: varchar("key", { length: 120 }).primaryKey(),
+    kind: varchar("kind", { length: 16 }).notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("login_throttle_created_idx").on(t.createdAt)],
 );
 
 export type UserRow = typeof users.$inferSelect;

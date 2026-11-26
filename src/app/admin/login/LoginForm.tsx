@@ -7,7 +7,16 @@ import { AlertTriangle, Loader2, Lock, Mail } from "lucide-react";
 import { api } from "@/lib/admin-api";
 import { Logo3D } from "@/components/brand/Logo3D";
 
-const DEMO_HINT = process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS !== "false";
+/**
+ * Demo credentials are opt-in and development-only.
+ *
+ * Previously this defaulted to ON, so a production build that forgot to set
+ * the flag advertised four working logins — including a super_admin — on the
+ * sign-in page. It now requires both an explicit opt-in AND a non-production
+ * build; production can never render this panel.
+ */
+const DEMO_HINT =
+  process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === "true";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -16,7 +25,7 @@ export default function LoginForm() {
   const [busy, setBusy] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
-  const [resetResult, setResetResult] = useState<{ message: string; resetUrl?: string } | null>(null);
+  const [resetResult, setResetResult] = useState<{ message: string } | null>(null);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -38,11 +47,11 @@ export default function LoginForm() {
     setBusy(true);
     setError(null);
     try {
-      const data = await api<{ message: string; resetUrl?: string }>("/api/auth/password-reset", {
+      const data = await api<{ message: string }>("/api/auth/password-reset", {
         method: "POST",
         json: { email: resetEmail },
       });
-      setResetResult({ message: data.message, resetUrl: data.resetUrl });
+      setResetResult({ message: data.message });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start the reset");
     } finally {
@@ -83,14 +92,9 @@ export default function LoginForm() {
               {resetResult ? (
                 <div className="border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                   <p>{resetResult.message}</p>
-                  {resetResult.resetUrl ? (
-                    <>
-                      <p className="mt-2 font-semibold text-slate-700">Reset link (no mail provider configured):</p>
-                      <a href={resetResult.resetUrl} className="mt-1 block break-all text-[var(--accent)] underline">
-                        {resetResult.resetUrl}
-                      </a>
-                    </>
-                  ) : null}
+                  <p className="mt-2 text-slate-500">
+                    If you do not receive an email within a few minutes, contact a super administrator to resend it.
+                  </p>
                 </div>
               ) : null}
               <button
@@ -166,7 +170,10 @@ export default function LoginForm() {
               <li>editor@dmnewsnetwork.com — Editor@2026 (Editor)</li>
               <li>reporter@dmnewsnetwork.com — Reporter@2026 (Author)</li>
             </ul>
-            <p className="mt-2 text-white/35">Change these passwords immediately after first sign-in. Hide this panel with NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS=false.</p>
+            <p className="mt-2 text-white/35">
+              Local development only — these accounts are never created in production. This panel requires
+              NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS=true and a non-production build.
+            </p>
           </div>
         ) : null}
 
