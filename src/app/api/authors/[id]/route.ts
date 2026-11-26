@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { authors } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
 import { authorSchema } from "@/lib/validators";
 import { sanitizePlainText } from "@/lib/sanitize";
 import { slugify } from "@/lib/utils";
@@ -10,6 +10,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     await requireCapability("authors.manage");
     const { id } = await ctx.params;
     const authorId = Number(id);
@@ -44,8 +45,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     await requireCapability("authors.manage");
     const { id } = await ctx.params;
     const authorId = Number(id);

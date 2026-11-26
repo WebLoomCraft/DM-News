@@ -2,7 +2,7 @@ import { and, desc, eq, ilike, inArray, isNull, or, sql, asc } from "drizzle-orm
 import { count } from "drizzle-orm";
 import { db } from "@/db";
 import { articles, authors, categories, tags, articleTags } from "@/db/schema";
-import { ApiError, handleApiError, ok, positiveInt, readJson, requireUser } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, positiveInt, readJson, requireUser } from "@/lib/api";
 import { can, canEditRecord } from "@/lib/permissions";
 import { saveArticle } from "@/lib/articles-service";
 import { articleSchema } from "@/lib/validators";
@@ -78,6 +78,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    assertSameOrigin(req);
     const user = await requireUser();
     if (!can(user, "articles.create")) throw new ApiError(403, "You cannot create articles");
     const input = articleSchema.parse(await readJson(req));

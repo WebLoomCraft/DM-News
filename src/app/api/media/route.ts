@@ -1,7 +1,7 @@
 import { count, desc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { media } from "@/db/schema";
-import { ApiError, handleApiError, ok, positiveInt, requireCapability } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, positiveInt, requireCapability } from "@/lib/api";
 import { saveUpload } from "@/lib/media-storage";
 import { sanitizePlainText } from "@/lib/sanitize";
 
@@ -34,6 +34,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    assertSameOrigin(req);
     const user = await requireCapability("media.manage");
     const formData = await req.formData();
     const file = formData.get("file");

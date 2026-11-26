@@ -1,7 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { homepageSections } from "@/db/schema";
-import { handleApiError, ok, readJson, requireCapability } from "@/lib/api";
+import { assertSameOrigin, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
 import { sectionsUpdateSchema } from "@/lib/validators";
 import { sanitizePlainText } from "@/lib/sanitize";
 
@@ -17,6 +17,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    assertSameOrigin(req);
     await requireCapability("homepage.manage");
     const body = sectionsUpdateSchema.parse(await readJson(req));
     for (const section of body.sections) {

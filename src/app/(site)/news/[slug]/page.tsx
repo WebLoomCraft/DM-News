@@ -13,7 +13,7 @@ import {
 } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { canEditRecord } from "@/lib/permissions";
-import { sanitizeRichText } from "@/lib/sanitize";
+import { sanitizeRichText, sanitizeTrustedHtml, toJsonLdScript } from "@/lib/sanitize";
 import { formatDate, formatDateTime, readingTime } from "@/lib/utils";
 import { ArticleCard, CategoryBadge } from "@/components/site/ArticleCard";
 import { SectionHeading } from "@/components/site/SectionHeading";
@@ -118,8 +118,8 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(newsArticleLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toJsonLdScript(breadcrumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toJsonLdScript(newsArticleLd) }} />
 
       {!isLive ? (
         <div className="bg-[#fff4e5] text-[#8a5300]">
@@ -240,7 +240,7 @@ export default async function ArticlePage({ params }: Props) {
             <div className="my-9 border-y border-[#e3e7ee] py-5 text-center">
               <p className="kicker mb-2 text-[0.6rem] text-[#9aa4b2]">Advertisement</p>
               {settings.adSlotHtml ? (
-                <div dangerouslySetInnerHTML={{ __html: settings.adSlotHtml }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeTrustedHtml(settings.adSlotHtml) }} />
               ) : (
                 <p className="text-xs text-[#9aa4b2]">In-article ad slot — configure creative in Admin → Settings.</p>
               )}

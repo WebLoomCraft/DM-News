@@ -14,14 +14,18 @@ export const passwordResetRequestSchema = z.object({
   email: z.string().trim().min(3).max(200),
 });
 
+/**
+ * 48 bytes of CSPRNG output is 64 base64url characters; the ceiling stops an
+ * attacker turning the confirm endpoint into a hashing amplifier.
+ */
 export const passwordResetConfirmSchema = z.object({
-  token: z.string().trim().min(10).max(200),
-  password: z.string().min(8).max(200),
+  token: z.string().trim().min(20).max(128).regex(/^[A-Za-z0-9_-]+$/, "Malformed token"),
+  password: z.string().min(10).max(200),
 });
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(6).max(200).optional(),
-  newPassword: z.string().min(8).max(200),
+  newPassword: z.string().min(10).max(200),
   userId: z.number().int().positive().optional(),
 });
 
@@ -81,7 +85,7 @@ export const authorSchema = z.object({
 export const userSchema = z.object({
   name: z.string().trim().min(2).max(160),
   email: z.string().trim().min(3).max(200),
-  password: z.string().min(8).max(200).optional(),
+  password: z.string().min(10).max(200).optional(),
   role: z.enum(["super_admin", "admin", "editor", "author"]),
   avatarUrl: nullableString(2000),
   bio: nullableString(1200),

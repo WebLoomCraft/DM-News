@@ -1,5 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
+import fs from "node:fs";
 import { Pool, type PoolConfig } from "pg";
+import { isProduction } from "@/lib/config";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -49,6 +51,42 @@ const isLocalHost = /(^|@|\/\/)(localhost|127\.0\.0\.1|0\.0\.0\.0|host\.docker\.
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 /**
+ * TLS configuration for remote databases.
+ *
+ * Previously `rejectUnauthorized: false` disabled certificate validation
+ * entirely, so anything able to intercept the connection could present any
+ * certificate and read or modify every query and password hash in transit.
+ * Verification is now on by default.
+ *
+ * Managed providers (Supabase, Neon, RDS…) present a certificate signed by a
+ * public CA, so the system trust store is enough. For a private CA, supply the
+ * PEM (or a path to it) in DATABASE_CA_CERT.
+ */
+function buildSslConfig(): PoolConfig["ssl"] {
+  if (isLocalHost) return undefined;
+
+  const mode = (process.env.PGSSLMODE || "").toLowerCase();
+  if (mode === "disable") {
+    if (isProduction()) {
+      throw new Error(
+        "PGSSLMODE=disable is not allowed in production. Database traffic must be encrypted and verified.",
+      );
+    }
+    console.warn("[db] TLS disabled for the database connection (non-production only).");
+    return undefined;
+  }
+
+  const caRaw = (process.env.DATABASE_CA_CERT || "").trim();
+  if (caRaw) {
+    // Accept either the PEM itself or a filesystem path to it.
+    const ca = caRaw.includes("BEGIN CERTIFICATE") ? caRaw.replace(/\\n/g, "\n") : fs.readFileSync(caRaw, "utf8");
+    return { ca, rejectUnauthorized: true };
+  }
+
+  return { rejectUnauthorized: true };
+}
+
+/**
  * Transaction-mode pooling cannot reuse server-side prepared statements, so a
  * tiny per-instance pool is both correct and plenty: the pooler, not the
  * client, is what multiplexes concurrent queries.
@@ -57,7 +95,7 @@ const defaultMax = isServerless ? 2 : 10;
 
 const poolConfig: PoolConfig = {
   connectionString,
-  ssl: isLocalHost ? undefined : { rejectUnauthorized: false },
+  ssl: buildSslConfig(),
   max: Number(process.env.PG_POOL_MAX ?? defaultMax),
   idleTimeoutMillis: 10_000,
   connectionTimeoutMillis: 15_000,

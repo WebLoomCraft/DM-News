@@ -1,12 +1,13 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { contactMessages } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     await requireCapability("messages.manage");
     const { id } = await ctx.params;
     const messageId = Number(id);
@@ -24,8 +25,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     await requireCapability("messages.manage");
     const { id } = await ctx.params;
     const messageId = Number(id);

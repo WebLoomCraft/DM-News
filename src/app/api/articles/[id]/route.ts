@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { articleTags, articles, authors, categories, tags } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireUser } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireUser } from "@/lib/api";
 import { canEditRecord } from "@/lib/permissions";
 import { deleteArticle, saveArticle } from "@/lib/articles-service";
 import { articleSchema } from "@/lib/validators";
@@ -50,6 +50,7 @@ export async function GET(_req: Request, ctx: Ctx) {
 
 export async function PATCH(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     const user = await requireUser();
     const { id } = await ctx.params;
     const articleId = Number(id);
@@ -93,8 +94,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     const user = await requireUser();
     const { id } = await ctx.params;
     const articleId = Number(id);

@@ -1,8 +1,8 @@
-import { count, eq } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/db";
 import { articles, users } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability, requireUser } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability, requireUser } from "@/lib/api";
 import { sanitizePlainText } from "@/lib/sanitize";
 import { roleLevel } from "@/lib/permissions";
 
@@ -10,6 +10,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     const currentUser = await requireCapability("users.manage");
     const { id } = await ctx.params;
     const userId = Number(id);
@@ -17,6 +18,16 @@ export async function PATCH(req: Request, ctx: Ctx) {
     const rows = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     const existing = rows[0];
     if (!existing) throw new ApiError(404, "User not found");
+
+    /*
+     * Privilege boundary. Without this an `admin` (who holds users.manage)
+     * could PATCH a super_admin — including its password — which is a full
+     * account takeover of the highest privileged role. You may only manage
+     * accounts strictly below your own level, plus your own record.
+     */
+    if (userId !== currentUser.id && roleLevel(existing.role) >= roleLevel(currentUser.role)) {
+      throw new ApiError(403, "You cannot modify an account at or above your own role");
+    }
 
     const body = await readJson<{
       name?: string;
@@ -57,6 +68,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
       patch.resetTokenExpiresAt = null;
     }
 
+    // Suspension or a role change must not leave the old privileges usable.
+    if (body.status !== undefined || body.role !== undefined || body.password !== undefined) {
+      patch.sessionVersion = sql`${users.sessionVersion} + 1`;
+    }
+
     const [row] = await db.update(users).set(patch).where(eq(users.id, userId)).returning();
     const { passwordHash: _ignored, ...safe } = row!;
     return ok({ item: safe });
@@ -65,13 +81,21 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     const currentUser = await requireCapability("users.manage");
     const { id } = await ctx.params;
     const userId = Number(id);
     if (!Number.isFinite(userId)) throw new ApiError(400, "Invalid user id");
     if (userId === currentUser.id) throw new ApiError(403, "You cannot delete your own account");
+
+    const victimRows = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const victim = victimRows[0];
+    if (!victim) throw new ApiError(404, "User not found");
+    if (roleLevel(victim.role) >= roleLevel(currentUser.role)) {
+      throw new ApiError(403, "You cannot delete an account at or above your own role");
+    }
 
     const remainingAdmins = await db
       .select({ value: count() })

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { media } from "@/db/schema";
-import { ApiError, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
+import { ApiError, assertSameOrigin, handleApiError, ok, readJson, requireCapability } from "@/lib/api";
 import { deleteStoredFile } from "@/lib/media-storage";
 import { sanitizePlainText } from "@/lib/sanitize";
 import { mediaPatchSchema } from "@/lib/validators";
@@ -27,8 +27,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
-export async function DELETE(_req: Request, ctx: Ctx) {
+export async function DELETE(req: Request, ctx: Ctx) {
   try {
+    assertSameOrigin(req);
     await requireCapability("media.delete");
     const { id } = await ctx.params;
     const mediaId = Number(id);

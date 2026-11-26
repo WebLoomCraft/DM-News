@@ -1,3 +1,4 @@
+import { sanitizeTrustedHtml, toJsonLdScript } from "@/lib/sanitize";
 import Link from "next/link";
 import { ArrowUpRight, Facebook, Instagram, Youtube } from "lucide-react";
 import { getSettings } from "@/lib/settings";
@@ -45,7 +46,7 @@ function AdSlot({ settings }: { settings: SettingsRow; label: string }) {
   return (
     <div className="my-10 border-y border-[#e3e7ee] bg-white/70 px-4 py-6 text-center">
       <p className="kicker mb-3 text-[0.6rem] text-[#9aa4b2]">Advertisement</p>
-      <div dangerouslySetInnerHTML={{ __html: settings.adSlotHtml }} />
+      <div dangerouslySetInnerHTML={{ __html: sanitizeTrustedHtml(settings.adSlotHtml) }} />
     </div>
   );
 }
@@ -413,7 +414,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toJsonLdScript(jsonLd) }} />
       <HeroMasthead
         settings={settings}
         lead={mastheadLead}
